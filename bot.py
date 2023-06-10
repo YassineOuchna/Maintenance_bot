@@ -19,9 +19,9 @@ class logs:  # le tableau des maintenances
             f"INSERT INTO maintenances VALUES ({new_id}, '{name}', '{type}','{date}',{length}, '{owner}', '{members}', {risk_lvl}, '{risk_cmt}','{comment}','{tags}')")
         conn.commit()
 
-    def get(name):
+    def get(id):
         r = cur.execute(
-            f"SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name='{name}'").fetchall()
+            f"SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchall()
         conn.commit()
         return r
 
@@ -35,10 +35,27 @@ class logs:  # le tableau des maintenances
                     f"UPDATE maintenances set {column}='{new_value}' WHERE id={id}")
         conn.commit()
 
-    def add_user(name, user):
+    def add_user(id, user):
+        old_members = cur.execute(
+            f"SELECT members FROM maintenances WHERE id={id}").fetchone()[0]
+        # using - as a seperator for easy access later on
+        new_members = old_members + '-' + user
+        cur.execute(
+            f"UPDATE maintenances set members = '{new_members}' WHERE id={id}")
         conn.commit()
 
-    def del_user(name, user):
+    def del_user(id, user):
+        old_members = cur.execute(
+            f"SELECT members FROM maintenances WHERE id={id}").fetchone()[0]
+        new_members = ''
+        for string in old_members.split('-'):
+            if string != user:
+                if len(new_members) == 0:
+                    new_members += string
+                else:
+                    new_members += '-' + string
+        cur.execute(
+            f"UPDATE maintenances set members = '{new_members}' WHERE id={id}")
         conn.commit()
 
     def delete(id):
