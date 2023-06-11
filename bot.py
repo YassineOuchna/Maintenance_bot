@@ -21,7 +21,7 @@ class logs:  # le tableau des maintenances
 
     def get(id):
         r = cur.execute(
-            f"SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchall()
+            f"SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchone()
         conn.commit()
         return r
 
