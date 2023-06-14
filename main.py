@@ -2,6 +2,9 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
 
+with open("./.gitignore/TOKEN.txt") as f:
+    token = f.read().strip()
+
 ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGHT, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
     9)
 
@@ -70,8 +73,7 @@ async def add_risk(update, context=ContextTypes.DEFAULT_TYPE):
              maintenance[3], maintenance[4], maintenance[5], maintenance[6])
     return ConversationHandler.END
 
-app = ApplicationBuilder().token(
-    "5909711949:AAHM_tD7Q4rGpxIHNKAeQVUrle_PYI_sdFM").build()
+app = ApplicationBuilder().token(token).build()
 
 app.add_handler(CommandHandler("hello", hello))
 
