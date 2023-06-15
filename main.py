@@ -50,9 +50,9 @@ async def add_date(update, context=ContextTypes.DEFAULT_TYPE):
     return ADD_LENGHT
 
 
-async def add_lenght(update, context=ContextTypes.DEFAULT_TYPE):
-    lenght = update.message.text
-    maintenance.append(lenght)
+async def add_length(update, context=ContextTypes.DEFAULT_TYPE):
+    length = update.message.text
+    maintenance.append(length)
     maintenance.append(update.message.from_user.username)
     await update.message.reply_text('Other than you, who else will help with this maintenance ? Don\'t forget to use - as a seperator')
     return ADD_MEMBERS
@@ -101,7 +101,8 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                                     f'date={maintenance[2]} \n'
                                     f'lenght ={maintenance[3]} \n'
                                     f'owner = {maintenance[4]} \n'
-                                    f'members = {maintenance[5]}...')
+                                    f'members = {maintenance[5]} \n'
+                                    '...')
     return ConversationHandler.END
 
 
@@ -113,9 +114,10 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
                                     f'name = {maintenance[0]} \n'
                                     f'type = {maintenance[1]} \n'
                                     f'date={maintenance[2]} \n'
-                                    f'lenght ={maintenance[3]}\n'
+                                    f'length ={maintenance[3]}\n'
                                     f'owner = {maintenance[4]} \n'
-                                    f'members = {maintenance[5]}...')
+                                    f'members = {maintenance[5]}\n'
+                                    '...')
     return ConversationHandler.END
 
 
@@ -137,9 +139,9 @@ conv_handler = ConversationHandler(
         ADD_NAME: [MessageHandler(filters.TEXT, add_name)],
         ADD_TYPE: [MessageHandler(filters.TEXT, add_type)],
         ADD_DATE: [MessageHandler(filters.TEXT, add_date)],
-        ADD_LENGHT: [MessageHandler(filters.TEXT, add_lenght)],
+        ADD_LENGHT: [MessageHandler(filters.TEXT, add_length)],
         ADD_MEMBERS: [MessageHandler(filters.TEXT, add_members)],
-        ADD_RISK: [MessageHandler(filters.TEXT, add_risk), CommandHandler('skip', skip)],
+        ADD_RISK: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_risk), CommandHandler('skip', skip)],
         ADD_RCMT: [MessageHandler(filters.TEXT, add_rcmt), CommandHandler('skip', skip)],
         ADD_CMT: [MessageHandler(filters.TEXT, add_cmt), CommandHandler('skip', skip)],
         ADD_TAGS: [MessageHandler(filters.TEXT, add_tags),
