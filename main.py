@@ -6,7 +6,7 @@ with open("./.gitignore/TOKEN.txt") as f:
     token = f.read().strip()
 
 ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGHT, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
-    9)
+    9)  # Different states of the "add" conversation
 
 
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -23,6 +23,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Choose a name for your maintenance")
+    # Global variable storing the maintenance throughout the conversation
     global maintenance
     maintenance = []
     return ADD_NAME
@@ -68,9 +69,58 @@ async def add_members(update, context=ContextTypes.DEFAULT_TYPE):
 async def add_risk(update, context=ContextTypes.DEFAULT_TYPE):
     risk = update.message.text
     maintenance.append(risk)
-    await update.message.reply_text('Great! Now you can add a risk comment or /skip if you don\'t want to')
-    logs.add(maintenance[0], maintenance[1], maintenance[2],
-             maintenance[3], maintenance[4], maintenance[5], maintenance[6])
+    await update.message.reply_text('Great! Now you can add secondary stuff like comments and tags or /skip if you don\'t want to.')
+    await update.message.reply_text('Add a risk comment')
+    return ADD_RCMT
+
+
+async def add_rcmt(update, context=ContextTypes.DEFAULT_TYPE):
+    risk_cmnt = update.message.text
+    maintenance.append(risk_cmnt)
+    await update.message.reply_text('You can also add a general comment')
+    return ADD_CMT
+
+
+async def add_cmt(update, context=ContextTypes.DEFAULT_TYPE):
+    cmnt = update.message.text
+    maintenance.append(cmnt)
+    await update.message.reply_text('You can also add tags')
+    return ADD_TAGS
+
+
+async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
+    tags = update.message.text
+    maintenance.append(tags)
+    maintenance_id = logs.add(maintenance[0], maintenance[1], maintenance[2],
+                              maintenance[3], maintenance[4], maintenance[5], maintenance[6],
+                              maintenance[7], maintenance[8], maintenance[9])
+    await update.message.reply_text(f'You have now added the following maintenance : \n'
+                                    f'id = {maintenance_id} \n'
+                                    f'name = {maintenance[0]} \n'
+                                    f'type = {maintenance[1]} \n'
+                                    f'date={maintenance[2]} \n'
+                                    f'lenght ={maintenance[3]} \n'
+                                    f'owner = {maintenance[4]} \n'
+                                    f'members = {maintenance[5]}...')
+    return ConversationHandler.END
+
+
+async def skip(update, context=ContextTypes.DEFAULT_TYPE):
+    maintenance_id = logs.add(maintenance[0], maintenance[1], maintenance[2],
+                              maintenance[3], maintenance[4], maintenance[5], maintenance[6])
+    await update.message.reply_text(f'You have now added the following maintenance : \n'
+                                    f'id = {maintenance_id} \n'
+                                    f'name = {maintenance[0]} \n'
+                                    f'type = {maintenance[1]} \n'
+                                    f'date={maintenance[2]} \n'
+                                    f'lenght ={maintenance[3]}\n'
+                                    f'owner = {maintenance[4]} \n'
+                                    f'members = {maintenance[5]}...')
+    return ConversationHandler.END
+
+
+async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Current procedure has been canceled, send /help for more information.')
     return ConversationHandler.END
 
 app = ApplicationBuilder().token(token).build()
@@ -81,7 +131,7 @@ app.add_handler(CommandHandler("help", help))
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('add', add)],
-    fallbacks=[],
+    fallbacks=[CommandHandler("cancel", cancel)],
 
     states={
         ADD_NAME: [MessageHandler(filters.TEXT, add_name)],
@@ -89,7 +139,11 @@ conv_handler = ConversationHandler(
         ADD_DATE: [MessageHandler(filters.TEXT, add_date)],
         ADD_LENGHT: [MessageHandler(filters.TEXT, add_lenght)],
         ADD_MEMBERS: [MessageHandler(filters.TEXT, add_members)],
-        ADD_RISK: [MessageHandler(filters.TEXT, add_risk)],
+        ADD_RISK: [MessageHandler(filters.TEXT, add_risk), CommandHandler('skip', skip)],
+        ADD_RCMT: [MessageHandler(filters.TEXT, add_rcmt), CommandHandler('skip', skip)],
+        ADD_CMT: [MessageHandler(filters.TEXT, add_cmt), CommandHandler('skip', skip)],
+        ADD_TAGS: [MessageHandler(filters.TEXT, add_tags),
+                   CommandHandler('skip', skip)]
     },
 )
 app.add_handler(conv_handler)

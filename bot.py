@@ -18,6 +18,7 @@ class logs:  # le tableau des maintenances
         cur.execute(
             f"INSERT INTO maintenances VALUES ({new_id}, '{name}', '{type}','{date}',{length}, '{owner}', '{members}', {risk_lvl}, '{risk_cmt}','{comment}','{tags}')")
         conn.commit()
+        return new_id
 
     def get(id):
         r = cur.execute(
