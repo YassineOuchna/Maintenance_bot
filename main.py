@@ -5,8 +5,8 @@ from bot import logs
 with open("./.gitignore/TOKEN.txt") as f:
     token = f.read().strip()
 
-ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGHT, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
-    9)  # Different states of the "add" conversation
+ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGTH, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
+    9)  # Different states, as intgers, of the "add" conversation
 
 
 async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -16,7 +16,7 @@ async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("I can help you manage all your maintenance needs through these commands : \n"
                                     "-> add : adding a maintenance \n"
-                                    "-> past [int] : show the last [int] maintenances \n"
+                                    "-> past [number] : show the last [number] maintenances \n"
                                     "-> get : show a specific maintenance \n"
                                     "-> edit : modify a maintenance")
 
@@ -47,7 +47,7 @@ async def add_date(update, context=ContextTypes.DEFAULT_TYPE):
     date = update.message.text
     maintenance.append(date)
     await update.message.reply_text('How many hours will it take ?')
-    return ADD_LENGHT
+    return ADD_LENGTH
 
 
 async def add_length(update, context=ContextTypes.DEFAULT_TYPE):
@@ -99,7 +99,7 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                                     f'name = {maintenance[0]} \n'
                                     f'type = {maintenance[1]} \n'
                                     f'date={maintenance[2]} \n'
-                                    f'lenght ={maintenance[3]} \n'
+                                    f'length ={maintenance[3]} \n'
                                     f'owner = {maintenance[4]} \n'
                                     f'members = {maintenance[5]} \n'
                                     '...')
@@ -139,7 +139,7 @@ conv_handler = ConversationHandler(
         ADD_NAME: [MessageHandler(filters.TEXT, add_name)],
         ADD_TYPE: [MessageHandler(filters.TEXT, add_type)],
         ADD_DATE: [MessageHandler(filters.TEXT, add_date)],
-        ADD_LENGHT: [MessageHandler(filters.TEXT, add_length)],
+        ADD_LENGTH: [MessageHandler(filters.TEXT, add_length)],
         ADD_MEMBERS: [MessageHandler(filters.TEXT, add_members)],
         ADD_RISK: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_risk), CommandHandler('skip', skip)],
         ADD_RCMT: [MessageHandler(filters.TEXT, add_rcmt), CommandHandler('skip', skip)],
