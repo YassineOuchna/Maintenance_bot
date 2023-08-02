@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
 
@@ -9,8 +9,10 @@ ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGTH, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_C
     9)  # Different states, as intgers, of the "add" conversation
 
 
-async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Hello! This is Viarezo's maintenance bot.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    hello_keyboard = ReplyKeyboardMarkup(
+        [['/add', '/get', '/latest', '/edit']], resize_keyboard=True, one_time_keyboard=True)
+    await update.message.reply_text("Hello! This is Viarezo's maintenance bot.", reply_markup=hello_keyboard)
 
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -52,10 +54,14 @@ async def add_date(update, context=ContextTypes.DEFAULT_TYPE):
 
 async def add_length(update, context=ContextTypes.DEFAULT_TYPE):
     length = update.message.text
-    maintenance.append(length)
-    maintenance.append(update.message.from_user.username)
-    await update.message.reply_text('Other than you, who else will help with this maintenance ? Don\'t forget to use - as a seperator')
-    return ADD_MEMBERS
+    if length.isdigit():
+        maintenance.append(length)
+        maintenance.append(update.message.from_user.username)
+        await update.message.reply_text('Other than you, who else will help with this maintenance ? Don\'t forget to use - as a seperator')
+        return ADD_MEMBERS
+    else:
+        await update.message.reply_text('Wrong input, I need an integer')
+        return ADD_LENGTH
 
 
 async def add_members(update, context=ContextTypes.DEFAULT_TYPE):
@@ -68,10 +74,14 @@ async def add_members(update, context=ContextTypes.DEFAULT_TYPE):
 
 async def add_risk(update, context=ContextTypes.DEFAULT_TYPE):
     risk = update.message.text
-    maintenance.append(risk)
-    await update.message.reply_text('Great! Now you can add secondary stuff like comments and tags or /skip if you don\'t want to.')
-    await update.message.reply_text('Add a risk comment')
-    return ADD_RCMT
+    if risk.isdigit():
+        maintenance.append(risk)
+        await update.message.reply_text('Great! Now you can add secondary stuff like comments and tags or /skip if you don\'t want to.')
+        await update.message.reply_text('Add a risk comment')
+        return ADD_RCMT
+    else:
+        await update.message.reply_text('Wrong input, I need an integer')
+        return ADD_RISK
 
 
 async def add_rcmt(update, context=ContextTypes.DEFAULT_TYPE):
@@ -127,26 +137,25 @@ async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(token).build()
 
-app.add_handler(CommandHandler("hello", hello))
+app.add_handler(CommandHandler("start", start))
 
 app.add_handler(CommandHandler("help", help))
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('add', add)],
-    fallbacks=[CommandHandler("cancel", cancel)],
-
     states={
-        ADD_NAME: [MessageHandler(filters.TEXT, add_name)],
-        ADD_TYPE: [MessageHandler(filters.TEXT, add_type)],
-        ADD_DATE: [MessageHandler(filters.TEXT, add_date)],
-        ADD_LENGTH: [MessageHandler(filters.TEXT, add_length)],
-        ADD_MEMBERS: [MessageHandler(filters.TEXT, add_members)],
+        ADD_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_name)],
+        ADD_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_type)],
+        ADD_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_date)],
+        ADD_LENGTH: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_length)],
+        ADD_MEMBERS: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_members)],
         ADD_RISK: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_risk), CommandHandler('skip', skip)],
-        ADD_RCMT: [MessageHandler(filters.TEXT, add_rcmt), CommandHandler('skip', skip)],
-        ADD_CMT: [MessageHandler(filters.TEXT, add_cmt), CommandHandler('skip', skip)],
-        ADD_TAGS: [MessageHandler(filters.TEXT, add_tags),
+        ADD_RCMT: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_rcmt), CommandHandler('skip', skip)],
+        ADD_CMT: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_cmt), CommandHandler('skip', skip)],
+        ADD_TAGS: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_tags),
                    CommandHandler('skip', skip)]
     },
+    fallbacks=[CommandHandler("cancel", cancel)],
 )
 app.add_handler(conv_handler)
 app.run_polling()

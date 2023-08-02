@@ -5,16 +5,20 @@ cur = conn.cursor()
 
 
 class logs:  # le tableau des maintenances
-    def __init__(self) -> None:  # creation de la table des maintenances
+    def __init__(self) -> None:
         cur.execute(
             "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , type, date_of_maintenance date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
 
     def end(self):  # Closes connection
         conn.close()
 
-    def add(name, type, date, length, owner, members, risk_lvl, risk_cmt='', comment='', tags=''):  # ajout d'une maintenance
-        new_id = cur.execute(
-            "SELECT max(id) from maintenances").fetchone()[0] + 1
+    # adding a line in the database
+    def add(name, type, date, length, owner, members, risk_lvl, risk_cmt='', comment='', tags=''):
+        latest_id = cur.execute(
+            "SELECT max(id) from maintenances").fetchone()[0]
+        if latest_id == None:  # in the case of an empty database
+            latest_id = 0
+        new_id = latest_id + 1
         cur.execute(
             f"INSERT INTO maintenances VALUES ({new_id}, '{name}', '{type}','{date}',{length}, '{owner}', '{members}', {risk_lvl}, '{risk_cmt}','{comment}','{tags}')")
         conn.commit()
