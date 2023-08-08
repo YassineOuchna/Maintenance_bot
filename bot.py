@@ -7,27 +7,32 @@ cur = conn.cursor()
 class logs:  # le tableau des maintenances
     def __init__(self) -> None:
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , type, date_of_maintenance date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
+            "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , procedure, date_of_maintenance date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
 
     def end(self):  # Closes connection
         conn.close()
 
     # adding a line in the database
-    def add(name, type, date, length, owner, members, risk_lvl, risk_cmt='', comment='', tags=''):
+    def add(name, procedure, date, length, owner, members, risk_lvl, risk_cmt='', comment='', tags=''):
         latest_id = cur.execute(
             "SELECT max(id) from maintenances").fetchone()[0]
         if latest_id == None:  # in the case of an empty database
             latest_id = 0
         new_id = latest_id + 1
         cur.execute(
-            f"INSERT INTO maintenances VALUES ({new_id}, '{name}', '{type}','{date}',{length}, '{owner}', '{members}', {risk_lvl}, '{risk_cmt}','{comment}','{tags}')")
+            f"INSERT INTO maintenances VALUES ({new_id}, '{name}', '{procedure}','{date}',{length}, '{owner}', '{members}', {risk_lvl}, '{risk_cmt}','{comment}','{tags}')")
         conn.commit()
         return new_id
 
-    def get(id):
+    def get_all(id):
         r = cur.execute(
-            f"SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchone()
+            f"SELECT id, name, procedure, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchone()
         conn.commit()
+        return r
+
+    def retrieve(name):
+        r = cur.execute(
+            f"SELECT id, name, procedure, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name={name}").fetchone()
         return r
 
     def edit(id, *edits):  # Takes multiple arguments, each argument is a couple (column,new_value)

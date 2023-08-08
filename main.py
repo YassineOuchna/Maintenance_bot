@@ -5,9 +5,6 @@ from bot import logs
 with open("./.gitignore/TOKEN.txt") as f:
     token = f.read().strip()
 
-ADD_NAME, ADD_TYPE, ADD_DATE, ADD_LENGTH, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
-    9)  # Different states, as intgers, of the "add" conversation
-
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     hello_keyboard = ReplyKeyboardMarkup(
@@ -22,6 +19,11 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                                     "-> get : show a specific maintenance \n"
                                     "-> edit : modify a maintenance")
 
+'''--- ADD CONVERSATION ---'''
+
+ADD_NAME, ADD_PROCEDURE, ADD_DATE, ADD_LENGTH, ADD_MEMBERS, ADD_RISK, ADD_RCMT, ADD_CMT, ADD_TAGS = range(
+    9)  # Different states, as intgers, of the "add" conversation
+
 
 async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Choose a name for your maintenance")
@@ -34,13 +36,13 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def add_name(update, context: ContextTypes.DEFAULT_TYPE):
     name = update.message.text
     maintenance.append(name)
-    await update.message.reply_text('Great! Now specify the type of the maintenance')
-    return ADD_TYPE
+    await update.message.reply_text('Great! Now specify the procedure of the maintenance')
+    return ADD_PROCEDURE
 
 
-async def add_type(update, context: ContextTypes.DEFAULT_TYPE):
-    type = update.message.text
-    maintenance.append(type)
+async def add_procedure(update, context: ContextTypes.DEFAULT_TYPE):
+    procedure = update.message.text
+    maintenance.append(procedure)
     await update.message.reply_text('Specify a date for the maintenance in the formate d-m-y')
     return ADD_DATE
 
@@ -105,13 +107,13 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6],
                               maintenance[7], maintenance[8], maintenance[9])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f'id = {maintenance_id} \n'
-                                    f'name = {maintenance[0]} \n'
-                                    f'type = {maintenance[1]} \n'
-                                    f'date={maintenance[2]} \n'
-                                    f'length ={maintenance[3]} \n'
-                                    f'owner = {maintenance[4]} \n'
-                                    f'members = {maintenance[5]} \n'
+                                    f':file_folder: id = {maintenance_id} \n'
+                                    f':duck: Nom = {maintenance[0]} \n'
+                                    f':newspaper: Déroulé = {maintenance[1]} \n'
+                                    f':alarm_clock: Date={maintenance[2]} \n'
+                                    f':hourglass_flowing_sand: Durée ={maintenance[3]} \n'
+                                    f':bust_in_silhouette: Propriétaire = {maintenance[4]} \n'
+                                    f':busts_in_silhouette: Membres = {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
 
@@ -120,15 +122,46 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
     maintenance_id = logs.add(maintenance[0], maintenance[1], maintenance[2],
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f'id = {maintenance_id} \n'
-                                    f'name = {maintenance[0]} \n'
-                                    f'type = {maintenance[1]} \n'
-                                    f'date={maintenance[2]} \n'
-                                    f'length ={maintenance[3]}\n'
-                                    f'owner = {maintenance[4]} \n'
-                                    f'members = {maintenance[5]}\n'
+                                    f':file_folder: id = {maintenance_id} \n'
+                                    f':duck: Nom = {maintenance[0]} \n'
+                                    f':newspaper: Déroulé = {maintenance[1]} \n'
+                                    f':alarm_clock: Date={maintenance[2]} \n'
+                                    f':hourglass_flowing_sand: Durée ={maintenance[3]} \n'
+                                    f':bust_in_silhouette: Propriétaire = {maintenance[4]} \n'
+                                    f':busts_in_silhouette: Membres = {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
+
+'''--- GET CONVERSATION ---'''
+
+GET_NAME = range(1)
+
+
+async def get(update, context=ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('What\'s the name of the maintenance ?')
+    return GET_NAME
+
+
+async def querry(update, context=ContextTypes.DEFAULT_TYPE):
+    name_given = update.message.text
+    querry_result = logs.retrieve(name_given)
+    if querry_result == None:
+        await update.message.reply.text('Oops! There is no such maintenance.')
+    else:
+        await update.message.reply.text('Found the following maintenance : \n'
+                                        f':file_folder: id = {querry_result[0]} \n'
+                                        f':duck: Nom = {querry_result[1]} \n'
+                                        f':newspaper: Déroulé = {querry_result[2]} \n'
+                                        f':alarm_clock: Date={querry_result[3]} \n'
+                                        f':hourglass_flowing_sand: Durée ={querry_result[4]} \n'
+                                        f':bust_in_silhouette: Propriétaire = {querry_result[5]} \n'
+                                        f':busts_in_silhouette: Membres = {querry_result[6]} \n'
+                                        f':warning: Risk : {querry_result[7]}\n'
+                                        f'-{querry_result[8]}'
+                                        '...')
+    return ConversationHandler.END
+
+'''--- LATEST CONVERSATION ---'''
 
 
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
@@ -141,11 +174,11 @@ app.add_handler(CommandHandler("start", start))
 
 app.add_handler(CommandHandler("help", help))
 
-conv_handler = ConversationHandler(
+conv_handler_add = ConversationHandler(
     entry_points=[CommandHandler('add', add)],
     states={
         ADD_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_name)],
-        ADD_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_type)],
+        ADD_PROCEDURE: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_procedure)],
         ADD_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_date)],
         ADD_LENGTH: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_length)],
         ADD_MEMBERS: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_members)],
@@ -157,5 +190,13 @@ conv_handler = ConversationHandler(
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
-app.add_handler(conv_handler)
+
+conv_handler_get = ConversationHandler(
+    entry_points=[CommandHandler('get', get)],
+    states={GET_NAME: [MessageHandler(
+        filters.TEXT & ~filters.COMMAND, querry)]},
+    fallbacks=[CommandHandler('cancel', cancel)]
+)
+app.add_handler(conv_handler_add)
+app.add_handler(conv_handler_get)
 app.run_polling()
