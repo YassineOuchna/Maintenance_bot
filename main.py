@@ -1,6 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
+from bot import cur, conn
 
 with open("./.gitignore/TOKEN.txt") as f:
     token = f.read().strip()
@@ -107,12 +108,12 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6],
                               maintenance[7], maintenance[8], maintenance[9])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f':file_folder: id = {maintenance_id} \n'
-                                    f':duck: Nom = {maintenance[0]} \n'
-                                    f':newspaper: Déroulé = {maintenance[1]} \n'
-                                    f':alarm_clock: Date={maintenance[2]} \n'
-                                    f':hourglass_flowing_sand: Durée ={maintenance[3]} \n'
-                                    f':bust_in_silhouette: Propriétaire = {maintenance[4]} \n'
+                                    f':file_folder id : {maintenance_id} \n'
+                                    f':duck Nom = {maintenance[0]} \n'
+                                    f':newspaper Déroulé : {maintenance[1]} \n'
+                                    f':alarm_clock: Date : {maintenance[2]} \n'
+                                    f':hourglass_flowing_sand: Durée : {maintenance[3]} \n'
+                                    u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
                                     f':busts_in_silhouette: Membres = {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
@@ -122,13 +123,13 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
     maintenance_id = logs.add(maintenance[0], maintenance[1], maintenance[2],
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f':file_folder: id = {maintenance_id} \n'
-                                    f':duck: Nom = {maintenance[0]} \n'
-                                    f':newspaper: Déroulé = {maintenance[1]} \n'
-                                    f':alarm_clock: Date={maintenance[2]} \n'
-                                    f':hourglass_flowing_sand: Durée ={maintenance[3]} \n'
-                                    f':bust_in_silhouette: Propriétaire = {maintenance[4]} \n'
-                                    f':busts_in_silhouette: Membres = {maintenance[5]} \n'
+                                    f':file_folder id : {maintenance_id} \n'
+                                    f':duck Nom = {maintenance[0]} \n'
+                                    f':newspaper Déroulé : {maintenance[1]} \n'
+                                    f':alarm_clock: Date : {maintenance[2]} \n'
+                                    f':hourglass_flowing_sand: Durée : {maintenance[3]} \n'
+                                    u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
+                                    u'\U0001F465' f' Membres : {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
 
@@ -144,24 +145,58 @@ async def get(update, context=ContextTypes.DEFAULT_TYPE):
 
 async def querry(update, context=ContextTypes.DEFAULT_TYPE):
     name_given = update.message.text
-    querry_result = logs.retrieve(name_given)
-    if querry_result == None:
-        await update.message.reply.text('Oops! There is no such maintenance.')
+    query_result = logs.retrieve(name_given)
+    if query_result == None:
+        await update.message.reply_text('Oops! There is no such maintenance.')
     else:
-        await update.message.reply.text('Found the following maintenance : \n'
-                                        f':file_folder: id = {querry_result[0]} \n'
-                                        f':duck: Nom = {querry_result[1]} \n'
-                                        f':newspaper: Déroulé = {querry_result[2]} \n'
-                                        f':alarm_clock: Date={querry_result[3]} \n'
-                                        f':hourglass_flowing_sand: Durée ={querry_result[4]} \n'
-                                        f':bust_in_silhouette: Propriétaire = {querry_result[5]} \n'
-                                        f':busts_in_silhouette: Membres = {querry_result[6]} \n'
-                                        f':warning: Risk : {querry_result[7]}\n'
-                                        f'-{querry_result[8]}'
+        await update.message.reply_text('Found the following maintenance : \n'
+                                        u'\U0001F4C2' f' id : {query_result[0]} \n'
+                                        '\n'
+                                        u'\U0001F986' f' Nom : {query_result[1]} \n'
+                                        '\n'
+                                        u'\U0001F4F0' f' Déroulé : {query_result[2]} \n'
+                                        '\n'
+                                        u'\U000023F0' f' Date : {query_result[3]} \n'
+                                        '\n'
+                                        u'\U000023F3' f' Durée : {query_result[4]} \n'
+                                        '\n'
+                                        u'\U0001F464' f' Propriétaire : {query_result[5]} \n'
+                                        '\n'
+                                        u'\U0001F465' f' Membres : {query_result[6]} \n'
+                                        '\n'
+                                        u'\U000026A0' f' Risk : {query_result[7]}\n'
+                                        f'-{query_result[8]} \n'
                                         '...')
     return ConversationHandler.END
 
-'''--- LATEST CONVERSATION ---'''
+'''--- LATEST ---'''
+
+
+async def latest(update, context=ContextTypes.DEFAULT_TYPE):
+    latest_three = cur.execute(
+        'SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances ORDER BY id DESC LIMIT 3').fetchall()
+    conn.commit()
+    for query_result in latest_three:
+        await update.message.reply_text(u'\U0001F4C2' f' id : {query_result[0]} \n'
+                                        '\n'
+                                        u'\U0001F986' f' Nom : {query_result[1]} \n'
+                                        '\n'
+                                        u'\U0001F4F0' f' Déroulé : {query_result[2]} \n'
+                                        '\n'
+                                        u'\U000023F0' f' Date : {query_result[3]} \n'
+                                        '\n'
+                                        u'\U000023F3' f' Durée : {query_result[4]} \n'
+                                        '\n'
+                                        u'\U0001F464' f' Propriétaire : {query_result[5]} \n'
+                                        '\n'
+                                        u'\U0001F465' f' Membres : {query_result[6]} \n'
+                                        '\n'
+                                        u'\U000026A0' f' Risk : {query_result[7]}\n'
+                                        f'-{query_result[8]} \n'
+                                        '\n'
+                                        u'\U0000270D' f' Commentaires : {query_result[9]} \n'
+                                        '\n'
+                                        u'\U0001F4CC' f' Tags : {query_result[10]}')
 
 
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
@@ -173,6 +208,8 @@ app = ApplicationBuilder().token(token).build()
 app.add_handler(CommandHandler("start", start))
 
 app.add_handler(CommandHandler("help", help))
+
+app.add_handler(CommandHandler('latest', latest))
 
 conv_handler_add = ConversationHandler(
     entry_points=[CommandHandler('add', add)],
