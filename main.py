@@ -108,11 +108,16 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6],
                               maintenance[7], maintenance[8], maintenance[9])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f':file_folder id : {maintenance_id} \n'
-                                    f':duck Nom = {maintenance[0]} \n'
-                                    f':newspaper Déroulé : {maintenance[1]} \n'
-                                    f':alarm_clock: Date : {maintenance[2]} \n'
-                                    f':hourglass_flowing_sand: Durée : {maintenance[3]} \n'
+                                    u'\U0001F4C2' f' id : {maintenance_id} \n'
+                                    '\n'
+                                    u'\U0001F986' f' Nom = {maintenance[0]} \n'
+                                    '\n'
+                                    u'\U0001F4F0' f' Déroulé : {maintenance[1]} \n'
+                                    '\n'
+                                    u'\U000023F0' f' Date : {maintenance[2]} \n'
+                                    '\n'
+                                    u'\U000023F3' f' Durée : {maintenance[3]} \n'
+                                    '\n'
                                     u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
                                     f':busts_in_silhouette: Membres = {maintenance[5]} \n'
                                     '...')
@@ -123,11 +128,16 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
     maintenance_id = logs.add(maintenance[0], maintenance[1], maintenance[2],
                               maintenance[3], maintenance[4], maintenance[5], maintenance[6])
     await update.message.reply_text(f'You have now added the following maintenance : \n'
-                                    f':file_folder id : {maintenance_id} \n'
-                                    f':duck Nom = {maintenance[0]} \n'
-                                    f':newspaper Déroulé : {maintenance[1]} \n'
-                                    f':alarm_clock: Date : {maintenance[2]} \n'
-                                    f':hourglass_flowing_sand: Durée : {maintenance[3]} \n'
+                                    u'\U0001F4C2' f' id : {maintenance_id} \n'
+                                    '\n'
+                                    u'\U0001F986' f' Nom = {maintenance[0]} \n'
+                                    '\n'
+                                    u'\U0001F4F0' f' Déroulé : {maintenance[1]} \n'
+                                    '\n'
+                                    u'\U000023F0' f' Date : {maintenance[2]} \n'
+                                    '\n'
+                                    u'\U000023F3' f' Durée : {maintenance[3]} \n'
+                                    '\n'
                                     u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
                                     u'\U0001F465' f' Membres : {maintenance[5]} \n'
                                     '...')
@@ -145,7 +155,7 @@ async def get(update, context=ContextTypes.DEFAULT_TYPE):
 
 async def querry(update, context=ContextTypes.DEFAULT_TYPE):
     name_given = update.message.text
-    query_result = logs.retrieve(name_given)
+    query_result = logs.retrieve_by_name(name_given)
     if query_result == None:
         await update.message.reply_text('Oops! There is no such maintenance.')
     else:
@@ -173,9 +183,7 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
 
 
 async def latest(update, context=ContextTypes.DEFAULT_TYPE):
-    latest_three = cur.execute(
-        'SELECT id, name, type, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances ORDER BY id DESC LIMIT 3').fetchall()
-    conn.commit()
+    latest_three = logs.latest(3)
     for query_result in latest_three:
         await update.message.reply_text(u'\U0001F4C2' f' id : {query_result[0]} \n'
                                         '\n'
@@ -197,6 +205,50 @@ async def latest(update, context=ContextTypes.DEFAULT_TYPE):
                                         u'\U0000270D' f' Commentaires : {query_result[9]} \n'
                                         '\n'
                                         u'\U0001F4CC' f' Tags : {query_result[10]}')
+
+
+'''--- EDIT CONVERSATION ---'''
+
+EDIT_FIND, EDIT_WHAT = range(2)
+
+
+async def edit_find(update, context=ContextTypes.DEFAULT_TYPE):
+    biggest_id = cur.execute("SELECT max(id) from maintenances").fetchone()[0]
+    await update.message.reply_text("what is the id of the maintenance that you want to edit ? \n"
+                                    '\n'
+                                    f'The current most recent maintenance has an id of {biggest_id}')
+    return EDIT_FIND
+
+
+async def edit_what(update, context=ContextTypes.DEFAULT_TYPE):
+    editing_id = update.message.text
+    query_result = logs.retrieve_by_id(editing_id)
+    if query_result == None:
+        await update.message.reply_text('No such maintenance exists')
+        return EDIT_FIND
+    else:
+        await update.message.reply_text(u'\U0001F4C2' f' id : {query_result[0]} \n'
+                                        '\n'
+                                        u'\U0001F986' f' name : {query_result[1]} \n'
+                                        '\n'
+                                        u'\U0001F4F0' f' procedure : {query_result[2]} \n'
+                                        '\n'
+                                        u'\U000023F0' f' date : {query_result[3]} \n'
+                                        '\n'
+                                        u'\U000023F3' f' length : {query_result[4]} \n'
+                                        '\n'
+                                        u'\U0001F464' f' owner : {query_result[5]} \n'
+                                        '\n'
+                                        u'\U0001F465' f' members : {query_result[6]} \n'
+                                        '\n'
+                                        u'\U000026A0' f' risk_lvl : {query_result[7]}\n'
+                                        f'risk_cmt -{query_result[8]} \n'
+                                        '\n'
+                                        u'\U0000270D' f' comment : {query_result[9]} \n'
+                                        '\n'
+                                        u'\U0001F4CC' f' tags : {query_result[10]}')
+        await update.message.reply_text('')
+        return EDIT_WHAT
 
 
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):

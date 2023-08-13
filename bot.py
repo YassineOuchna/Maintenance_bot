@@ -7,7 +7,7 @@ cur = conn.cursor()
 class logs:  # le tableau des maintenances
     def __init__(self) -> None:
         cur.execute(
-            "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , procedure, date_of_maintenance date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
+            "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , procedure, date date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
 
     def end(self):  # Closes connection
         conn.close()
@@ -26,13 +26,26 @@ class logs:  # le tableau des maintenances
 
     def get_all(id):
         r = cur.execute(
-            f"SELECT id, name, procedure, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchone()
+            f"SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={id}").fetchone()
         conn.commit()
         return r
 
-    def retrieve(name):
+    def latest(num):
         r = cur.execute(
-            f"SELECT id, name, procedure, date_of_maintenance, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name={name}").fetchone()
+            'SELECT id, name, type, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances ORDER BY id DESC LIMIT 3').fetchall()
+        conn.commit()
+        return r
+
+    def retrieve_by_name(name):
+        r = cur.execute(
+            f"SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name={name}").fetchone()
+        conn.commit()
+        return r
+
+    def retrieve_by_id(num):
+        r = cur.execute(
+            f"SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE id={num}").fetchone()
+        conn.commit()
         return r
 
     def edit(id, *edits):  # Takes multiple arguments, each argument is a couple (column,new_value)
