@@ -8,6 +8,7 @@ class logs:  # le tableau des maintenances
     def __init__(self) -> None:
         cur.execute(
             "CREATE TABLE IF NOT EXISTS maintenances(id int NOT NULL, name , procedure, date date,length int,owner,members DEFAULT '',risk_lvl int,risk_cmt DEFAULT '',comment DEFAULT '',tags DEFAULT '')")
+        conn.commit()
 
     def end(self):  # Closes connection
         conn.close()

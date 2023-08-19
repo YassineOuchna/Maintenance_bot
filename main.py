@@ -119,7 +119,7 @@ async def add_tags(update, context=ContextTypes.DEFAULT_TYPE):
                                     u'\U000023F3' f' Durée : {maintenance[3]} \n'
                                     '\n'
                                     u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
-                                    f':busts_in_silhouette: Membres = {maintenance[5]} \n'
+                                    u'\U0001F465' f' Membres = {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
 
@@ -138,7 +138,7 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
                                     '\n'
                                     u'\U000023F3' f' Durée : {maintenance[3]} \n'
                                     '\n'
-                                    u'\U0001F464' f': Propriétaire : {maintenance[4]} \n'
+                                    u'\U0001F464' f' Propriétaire : {maintenance[4]} \n'
                                     u'\U0001F465' f' Membres : {maintenance[5]} \n'
                                     '...')
     return ConversationHandler.END
@@ -209,18 +209,19 @@ async def latest(update, context=ContextTypes.DEFAULT_TYPE):
 
 '''--- EDIT CONVERSATION ---'''
 
-EDIT_FIND, EDIT_WHAT = range(2)
+EDIT_FIND, EDIT_SOMETHING, EDIT_TO, FINISHED_EDITING = range(4)
 
 
-async def edit_find(update, context=ContextTypes.DEFAULT_TYPE):
+async def edit(update, context=ContextTypes.DEFAULT_TYPE):
     biggest_id = cur.execute("SELECT max(id) from maintenances").fetchone()[0]
-    await update.message.reply_text("what is the id of the maintenance that you want to edit ? \n"
+    await update.message.reply_text("What is the id of the maintenance that you want to edit ? \n"
                                     '\n'
                                     f'The current most recent maintenance has an id of {biggest_id}')
     return EDIT_FIND
 
 
-async def edit_what(update, context=ContextTypes.DEFAULT_TYPE):
+async def edit_find(update, context=ContextTypes.DEFAULT_TYPE):
+    global editing_id
     editing_id = update.message.text
     query_result = logs.retrieve_by_id(editing_id)
     if query_result == None:
@@ -242,13 +243,65 @@ async def edit_what(update, context=ContextTypes.DEFAULT_TYPE):
                                         u'\U0001F465' f' members : {query_result[6]} \n'
                                         '\n'
                                         u'\U000026A0' f' risk_lvl : {query_result[7]}\n'
-                                        f'risk_cmt -{query_result[8]} \n'
+                                        f'risk_cmt : {query_result[8]} \n'
                                         '\n'
                                         u'\U0000270D' f' comment : {query_result[9]} \n'
                                         '\n'
                                         u'\U0001F4CC' f' tags : {query_result[10]}')
-        await update.message.reply_text('')
-        return EDIT_WHAT
+        edit_keyboard = ReplyKeyboardMarkup(
+            [[u'\U0001F4C2', 'procedure', 'date', 'length', 'owner', 'members', 'risk_lvl', 'risk_cmt', 'comment', 'tags']], one_time_keyboard=True)
+        await update.message.reply_text('What would you like to edit ?', reply_markup=edit_keyboard)
+        return EDIT_SOMETHING
+
+
+async def edit_something(update: Update, context=ContextTypes.DEFAULT_TYPE):
+    global column
+    column = update.message.text
+    await update.message.reply_text('What would you like to change it to ? \n'
+                                    '\n'
+                                    'Reminder to follow the data types of these columns : \n'
+                                    '\n'
+                                    'date : dd-mm-yy \n'
+                                    'length : interger (hrs) \n'
+                                    'members : members seperated by - \n'
+                                    'risk_lvl : integer 0-5 \n'
+                                    )
+    return EDIT_TO
+
+
+async def edit_to(update, context=ContextTypes.DEFAULT_TYPE):
+    new_value = update.message.text
+    edits = (column, new_value)
+    logs.edit(editing_id, edits)
+    await update.message.reply_text('What other column do you want to edit ? \n'
+                                    'If finished, send /finished_editing')
+    return EDIT_SOMETHING
+
+
+async def finished_editing(update, context=ContextTypes.DEFAULT_TYPE):
+    query_result = logs.retrieve_by_id(editing_id)
+    await update.message.reply_text('Here is the new edited maintenance :'
+                                    u'\U0001F4C2' f' id : {query_result[0]} \n'
+                                    '\n'
+                                    u'\U0001F986' f' Nom : {query_result[1]} \n'
+                                    '\n'
+                                    u'\U0001F4F0' f' Déroulé : {query_result[2]} \n'
+                                    '\n'
+                                    u'\U000023F0' f' Date : {query_result[3]} \n'
+                                    '\n'
+                                    u'\U000023F3' f' Durée : {query_result[4]} \n'
+                                    '\n'
+                                    u'\U0001F464' f' Propriétaire : {query_result[5]} \n'
+                                    '\n'
+                                    u'\U0001F465' f' Membres : {query_result[6]} \n'
+                                    '\n'
+                                    u'\U000026A0' f' Risk : {query_result[7]}\n'
+                                    f'-{query_result[8]} \n'
+                                    '\n'
+                                    u'\U0000270D' f' Commentaires : {query_result[9]} \n'
+                                    '\n'
+                                    u'\U0001F4CC' f' Tags : {query_result[10]}')
+    return ConversationHandler.END
 
 
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
@@ -286,6 +339,18 @@ conv_handler_get = ConversationHandler(
         filters.TEXT & ~filters.COMMAND, querry)]},
     fallbacks=[CommandHandler('cancel', cancel)]
 )
+
+conv_handler_edit = ConversationHandler(
+    entry_points=[CommandHandler('edit', edit)],
+    states={EDIT_FIND: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_find)],
+            EDIT_SOMETHING: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_something)],
+            EDIT_TO: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_to), CommandHandler(
+                'finished_editing', finished_editing)]
+            },
+    fallbacks=[CommandHandler('cancel', cancel)]
+)
+
+app.add_handler(conv_handler_edit)
 app.add_handler(conv_handler_add)
 app.add_handler(conv_handler_get)
 app.run_polling()
