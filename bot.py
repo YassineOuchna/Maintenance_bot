@@ -31,15 +31,20 @@ class logs:  # le tableau des maintenances
         conn.commit()
         return r
 
-    def latest(num):
+    def latest_id():
+        r = cur.execute("SELECT max(id) from maintenances").fetchone()[0]
+        conn.commit()
+        return r
+
+    def latest():
         r = cur.execute(
-            'SELECT id, name, type, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances ORDER BY id DESC LIMIT 3').fetchall()
+            'SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances ORDER BY id DESC LIMIT 3').fetchall()
         conn.commit()
         return r
 
     def retrieve_by_name(name):
         r = cur.execute(
-            f"SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name={name}").fetchone()
+            f"SELECT id, name, procedure, date, length, owner, members, risk_lvl, risk_cmt, comment, tags FROM maintenances WHERE name='{name}'").fetchone()
         conn.commit()
         return r
 

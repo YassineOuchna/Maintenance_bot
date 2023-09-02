@@ -1,40 +1,41 @@
-# BOT Telegram de maintenances de ViaRézo
+# BOT Maintenance
 
-C'est un bot telegram qui gère les différentes types de maintenances au sein de l'assiociation ViaRézo du campus de CentraleSupélec.  
+C'est un bot telegram qui gère les différentes types de maintenances au sein de l'assiociation ViaRézo du campus de CentraleSupélec. 
+
+## Librairies utilisées 
+
+sqlite3 - telegram - telegram.ext
 
 ## Fichiers et fonctionalités 
 
+**database.db** : 
+Pour identifier l'ensembles des informations de maintenance, on utilise un tableau SQL ayant les colonnes suivantes :
+- id : un entier unique pour chaque maintenance incrémenté par 1.
+- name : un nom court mais aussi descriptif.
+- procedure : procédure effectué lors de la maintenance.
+- date : date de la maintenance sous forme jj-mm-aa.
+- length : durée de la maintenance en nombre d'heures.
+- owner : le propriétaires qui a créé la maintenance (par défaut on prend l'@ telegram du créateur).
+- members : les membres participants à cette maintenance.
+- risk_lvl : le niveau du risque exprimé par un entier entre 0 et 5.
+- risk_cmt : commentaire sur le risque/downtime de la maintenance.
+- comment : commentaire général.
+- tags : tags réseau, vm, infra..etc.
+
+**bot.py** : 
+Fichier qui gére la database en utilisant sqlite3. 
+On définit une classe *logs* représentant notre tableau de maintenances : 
+ - init() : Crée une table sql (si elle n'existait pas déjà) appelée maintenances.
+ - add(*args*) : Ajoute une ligne (maintenance) dans la table ayant comme atrribues les *args*.
+ - latest() : Retourne les 3 dernières lignes.
+ - edit(*id*, *edits*) : Modifie la maintenance ayant l'*id* précisé avec les modifications *edits*
+
+
+
 **main** : 
-Fichier principal qui s'occupe de l'interaction du bot avec les utilisateurs 
-
-/maintenace (sans argument) : va récupérer toutes les informations de maintenace  en cours ou s'il y en a pas de la prochaine
-/maintenance list : fournit la liste des identifiants des maintenaces en cours ou futurs
-/maintenance ( avec argument = identifiant de la maintenance) : va récuprérer les informations de cette maintenance spécifiquement 
-
-**monitoring** :
-Ce fichier va permettre de gérer l'ensemble des autorisations de modifications d'erreurs, d'ajout de personnes capables d'éffectuer les maintenances
-/add : va fournir une liste des élèments à saisir pour compléter la création d'une maintenance
-/edit list : fournit la liste des élèments à modifer
-/edit ( avec argument= élèment dans la liste) : bot envoie une nouvelle question de ce qu'on veut modifier
-/argument choisi : la modofication
-/suscribe (argument) : ajouter le nom à la liste des memebres pour la maintenance choisie
+Fichier principal qui s'occupe de l'interaction du bot avec les utilisateurs (membres de l'associations). 
 
 
-**python** : 
-On a une classe Bot avec les propriétes suivantes:
 
-**database** : 
-Pour identifier l'ensembles des informations de maintenance on va introduire  l'Entité maintenance avec les attributs suivants:
--type
--date_heure
--duree
--membres
--nom
--deroule
--echelle_de_risque
--commentaire_risque
--tag
--identifiant
--proprietaire
 
 

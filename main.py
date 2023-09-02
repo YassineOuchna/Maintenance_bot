@@ -1,7 +1,6 @@
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
-from bot import cur, conn
 
 with open("./.gitignore/TOKEN.txt") as f:
     token = f.read().strip()
@@ -10,15 +9,19 @@ with open("./.gitignore/TOKEN.txt") as f:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     hello_keyboard = ReplyKeyboardMarkup(
         [['/add', '/get', '/latest', '/edit']], resize_keyboard=True, one_time_keyboard=True)
-    await update.message.reply_text("Hello! This is Viarezo's maintenance bot.", reply_markup=hello_keyboard)
+    await update.message.reply_text("Hello! Je suis le bot de maintenances de Viarézo.", reply_markup=hello_keyboard)
 
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("I can help you manage all your maintenance needs through these commands : \n"
-                                    "-> add : adding a maintenance \n"
-                                    "-> past [number] : show the last [number] maintenances \n"
-                                    "-> get : show a specific maintenance \n"
-                                    "-> edit : modify a maintenance")
+    await update.message.reply_text("Vous pouvez utiliser les commandes suivantes pour gérer vos maintenances : \n"
+                                    '\n'
+                                    "-> /add : Ajouter une maintenance \n"
+                                    '\n'
+                                    "-> /latest : Visualiser les 3 dernières maintenances \n"
+                                    '\n'
+                                    "-> /get :  Visualiser une maintenance dont vous connaissez son nom \n"
+                                    '\n'
+                                    "-> /edit : modifier une maintenance dont vous connaissez son id")
 
 '''--- ADD CONVERSATION ---'''
 
@@ -213,7 +216,7 @@ EDIT_FIND, EDIT_SOMETHING, EDIT_TO, FINISHED_EDITING = range(4)
 
 
 async def edit(update, context=ContextTypes.DEFAULT_TYPE):
-    biggest_id = cur.execute("SELECT max(id) from maintenances").fetchone()[0]
+    biggest_id = logs.latest_id()
     await update.message.reply_text("What is the id of the maintenance that you want to edit ? \n"
                                     '\n'
                                     f'The current most recent maintenance has an id of {biggest_id}')
@@ -249,7 +252,7 @@ async def edit_find(update, context=ContextTypes.DEFAULT_TYPE):
                                         '\n'
                                         u'\U0001F4CC' f' tags : {query_result[10]}')
         edit_keyboard = ReplyKeyboardMarkup(
-            [[u'\U0001F4C2', 'procedure', 'date', 'length', 'owner', 'members', 'risk_lvl', 'risk_cmt', 'comment', 'tags']], one_time_keyboard=True)
+            [['name', 'date', 'length', 'members', 'risk_lvl']], resize_keyboard=True, one_time_keyboard=True)
         await update.message.reply_text('What would you like to edit ?', reply_markup=edit_keyboard)
         return EDIT_SOMETHING
 
@@ -281,6 +284,7 @@ async def edit_to(update, context=ContextTypes.DEFAULT_TYPE):
 async def finished_editing(update, context=ContextTypes.DEFAULT_TYPE):
     query_result = logs.retrieve_by_id(editing_id)
     await update.message.reply_text('Here is the new edited maintenance :'
+                                    '\n'
                                     u'\U0001F4C2' f' id : {query_result[0]} \n'
                                     '\n'
                                     u'\U0001F986' f' Nom : {query_result[1]} \n'
@@ -343,7 +347,8 @@ conv_handler_get = ConversationHandler(
 conv_handler_edit = ConversationHandler(
     entry_points=[CommandHandler('edit', edit)],
     states={EDIT_FIND: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_find)],
-            EDIT_SOMETHING: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_something)],
+            EDIT_SOMETHING: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_something), CommandHandler(
+                'finished_editing', finished_editing)],
             EDIT_TO: [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_to), CommandHandler(
                 'finished_editing', finished_editing)]
             },
