@@ -24,11 +24,12 @@ Pour identifier l'ensembles des informations de maintenance, on utilise un table
 
 **bot.py** : 
 Fichier qui gére la database en utilisant sqlite3. 
-On définit une classe *logs* représentant notre tableau de maintenances : 
- - init() : Crée une table sql (si elle n'existait pas déjà) appelée maintenances.
+On définit une classe *logs* qui représente notre tableau de maintenances où on peut le manipuler à travers plusieurs fonctions comme: 
+ - init() : Crée une table sql (si elle n'existe pas déjà) appelée maintenances.
  - add(*args*) : Ajoute une ligne (maintenance) dans la table ayant comme atrribues les *args*.
  - latest() : Retourne les 3 dernières lignes.
  - edit(*id*, *edits*) : Modifie la maintenance ayant l'*id* précisé avec les modifications *edits*
+
 
 
 

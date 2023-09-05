@@ -9,7 +9,7 @@ with open("./.gitignore/TOKEN.txt") as f:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     hello_keyboard = ReplyKeyboardMarkup(
         [['/add', '/get', '/latest', '/edit']], resize_keyboard=True, one_time_keyboard=True)
-    await update.message.reply_text("Hello! Je suis le bot de maintenances de Viarézo.", reply_markup=hello_keyboard)
+    await update.message.reply_text("Hello! This is Viarézo's maintenance bot.", reply_markup=hello_keyboard)
 
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -21,7 +21,11 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                                     '\n'
                                     "-> /get :  Visualiser une maintenance dont vous connaissez son nom \n"
                                     '\n'
-                                    "-> /edit : modifier une maintenance dont vous connaissez son id")
+                                    "-> /edit : modifier une maintenance dont vous connaissez son id \n"
+                                    '\n'
+                                    "-> /cancel : Annuler la conversation/procédure au courant. \n"
+                                    '\n'
+                                    '-> /delete : Supprimer une maintenance.')
 
 '''--- ADD CONVERSATION ---'''
 
@@ -34,7 +38,7 @@ async def add(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Global variable storing the maintenance throughout the conversation
     global maintenance
     maintenance = []
-    return ADD_NAME
+    return ADD_NAME   # returns the next state/step of the conversation
 
 
 async def add_name(update, context: ContextTypes.DEFAULT_TYPE):
@@ -146,7 +150,9 @@ async def skip(update, context=ContextTypes.DEFAULT_TYPE):
                                     '...')
     return ConversationHandler.END
 
+
 '''--- GET CONVERSATION ---'''
+
 
 GET_NAME = range(1)
 
@@ -160,9 +166,10 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
     name_given = update.message.text
     query_result = logs.retrieve_by_name(name_given)
     if query_result == None:
-        await update.message.reply_text('Oops! There is no such maintenance.')
+        await update.message.reply_text('Oops! There is no such maintenance. You can see the name of the /latest three maintenances.')
     else:
         await update.message.reply_text('Found the following maintenance : \n'
+                                        '\n'
                                         u'\U0001F4C2' f' id : {query_result[0]} \n'
                                         '\n'
                                         u'\U0001F986' f' Nom : {query_result[1]} \n'
@@ -181,6 +188,7 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
                                         f'-{query_result[8]} \n'
                                         '...')
     return ConversationHandler.END
+
 
 '''--- LATEST ---'''
 
@@ -308,6 +316,66 @@ async def finished_editing(update, context=ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+'''--- DELETE CONVERSATION ---'''
+
+AREYOUSURE, DELETE = range(2)
+
+
+async def delete(update, context=ContextTypes.DEFAULT_TYPE):
+    biggest_id = logs.latest_id()
+    await update.message.reply_text("What is the id of the maintenance that you want to PERMANENTLY delete ? \n"
+                                    '\n'
+                                    f'The current most recent maintenance has an id of {biggest_id}')
+    return AREYOUSURE
+
+
+async def are_you_sure(update, context=ContextTypes.DEFAULT_TYPE):
+    global id_to_delete
+    id_to_delete = update.message.text
+    query_result = logs.retrieve_by_id(id_to_delete)
+    if query_result == None:
+        await update.message.reply_text('No such maintenance exists')
+        return AREYOUSURE
+    else:
+        yes_no_keyboard = ReplyKeyboardMarkup(
+            [['yes', 'no']], resize_keyboard=True, one_time_keyboard=True)
+        await update.message.reply_text('Are you sure this is the maintenance that you want to delete (yes/no) ? :'
+                                        '\n'
+                                        u'\U0001F4C2' f' id : {query_result[0]} \n'
+                                        '\n'
+                                        u'\U0001F986' f' Nom : {query_result[1]} \n'
+                                        '\n'
+                                        u'\U0001F4F0' f' Déroulé : {query_result[2]} \n'
+                                        '\n'
+                                        u'\U000023F0' f' Date : {query_result[3]} \n'
+                                        '\n'
+                                        u'\U000023F3' f' Durée : {query_result[4]} \n'
+                                        '\n'
+                                        u'\U0001F464' f' Propriétaire : {query_result[5]} \n'
+                                        '\n'
+                                        u'\U0001F465' f' Membres : {query_result[6]} \n'
+                                        '\n'
+                                        u'\U000026A0' f' Risk : {query_result[7]}\n'
+                                        f'-{query_result[8]} \n'
+                                        '\n'
+                                        u'\U0000270D' f' Commentaires : {query_result[9]} \n'
+                                        '\n'
+                                        u'\U0001F4CC' f' Tags : {query_result[10]}', reply_markup=yes_no_keyboard)
+
+    return DELETE
+
+
+async def sure(update, context=ContextTypes.DEFAULT_TYPE):
+    response = update.message.text
+    if response == 'yes':
+        logs.delete(id_to_delete)
+        await update.message.reply('Maintenance have been deleted')
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text('If you don\'t know the id you can see the /latest three maintenances.')
+        return AREYOUSURE
+
+
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Current procedure has been canceled, send /help for more information.')
     return ConversationHandler.END
@@ -319,6 +387,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help))
 
 app.add_handler(CommandHandler('latest', latest))
+
 
 conv_handler_add = ConversationHandler(
     entry_points=[CommandHandler('add', add)],
@@ -355,6 +424,15 @@ conv_handler_edit = ConversationHandler(
     fallbacks=[CommandHandler('cancel', cancel)]
 )
 
+conv_handler_delete = ConversationHandler(
+    entry_points=[CommandHandler('delete', delete)],
+    states={AREYOUSURE: [MessageHandler(
+        filters.TEXT & ~filters.COMMAND, are_you_sure)],
+        DELETE: [MessageHandler(filters.TEXT & ~filters.COMMAND, sure)]},
+    fallbacks=[CommandHandler('cancel', cancel)]
+)
+
+app.add_handler(conv_handler_delete)
 app.add_handler(conv_handler_edit)
 app.add_handler(conv_handler_add)
 app.add_handler(conv_handler_get)
