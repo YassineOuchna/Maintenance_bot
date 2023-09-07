@@ -13,6 +13,17 @@ class logs:  # le tableau des maintenances
     def end(self):  # Closes connection
         conn.close()
 
+    # Executes directly an sql command that retrives some sort of information
+    def direct_get(command):
+        r = cur.execute(command).fetchall()
+        conn.commit
+        return r
+
+    # Executes directly a command to apply changes to the database
+    def direct_execute(command):
+        cur.execute(command)
+        conn.commit
+
     # adding a line in the database
     def add(name, procedure, date, length, owner, members, risk_lvl, risk_cmt='', comment='', tags=''):
         latest_id = cur.execute(

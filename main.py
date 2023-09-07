@@ -1,4 +1,4 @@
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
 
@@ -9,7 +9,9 @@ with open("./.gitignore/TOKEN.txt") as f:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     hello_keyboard = ReplyKeyboardMarkup(
         [['/add', '/get', '/latest', '/edit']], resize_keyboard=True, one_time_keyboard=True)
-    await update.message.reply_text("Hello! This is Viarézo's maintenance bot.", reply_markup=hello_keyboard)
+    await update.message.reply_text("Hello! This is Viarézo's maintenance bot. \n"
+                                    '\n'
+                                    "You can send /help for a description of different commands.", reply_markup=hello_keyboard)
 
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -51,7 +53,7 @@ async def add_name(update, context: ContextTypes.DEFAULT_TYPE):
 async def add_procedure(update, context: ContextTypes.DEFAULT_TYPE):
     procedure = update.message.text
     maintenance.append(procedure)
-    await update.message.reply_text('Specify a date for the maintenance in the formate d-m-y')
+    await update.message.reply_text('Specify a date for the maintenance in the formate dd/mm/yy')
     return ADD_DATE
 
 
@@ -84,7 +86,7 @@ async def add_members(update, context=ContextTypes.DEFAULT_TYPE):
 
 async def add_risk(update, context=ContextTypes.DEFAULT_TYPE):
     risk = update.message.text
-    if risk.isdigit():
+    if risk.isdigit() and int(risk) in range(0, 6):
         maintenance.append(risk)
         await update.message.reply_text('Great! Now you can add secondary stuff like comments and tags or /skip if you don\'t want to.')
         await update.message.reply_text('Add a risk comment')
@@ -194,7 +196,7 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
 
 
 async def latest(update, context=ContextTypes.DEFAULT_TYPE):
-    latest_three = logs.latest(3)
+    latest_three = logs.latest()
     for query_result in latest_three:
         await update.message.reply_text(u'\U0001F4C2' f' id : {query_result[0]} \n'
                                         '\n'
@@ -268,16 +270,20 @@ async def edit_find(update, context=ContextTypes.DEFAULT_TYPE):
 async def edit_something(update: Update, context=ContextTypes.DEFAULT_TYPE):
     global column
     column = update.message.text
-    await update.message.reply_text('What would you like to change it to ? \n'
-                                    '\n'
-                                    'Reminder to follow the data types of these columns : \n'
-                                    '\n'
-                                    'date : dd-mm-yy \n'
-                                    'length : interger (hrs) \n'
-                                    'members : members seperated by - \n'
-                                    'risk_lvl : integer 0-5 \n'
-                                    )
-    return EDIT_TO
+    if column in ['name', 'date', 'length', 'members', 'risk_lvl', 'owner', 'procedure', 'comment', 'tags']:
+        await update.message.reply_text('What would you like to change it to ? \n'
+                                        '\n'
+                                        'Reminder to follow the data types of these columns : \n'
+                                        '\n'
+                                        'date : dd/mm/yy \n'
+                                        'length : interger (hrs) \n'
+                                        'members : members seperated by - \n'
+                                        'risk_lvl : integer 0-5 \n'
+                                        )
+        return EDIT_TO
+    else:
+        await update.message.reply_text('No such column exists / wrong syntaxe.')
+        return EDIT_SOMETHING
 
 
 async def edit_to(update, context=ContextTypes.DEFAULT_TYPE):
@@ -377,7 +383,7 @@ async def sure(update, context=ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel(update, context=ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Current procedure has been canceled, send /help for more information.')
+    await update.message.reply_text('Current conversation ended, send /help for more information.')
     return ConversationHandler.END
 
 app = ApplicationBuilder().token(token).build()
