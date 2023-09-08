@@ -47,7 +47,47 @@ Il intéragit avec l'utilisateur à travers plusieurs fonctions et *conversation
 - /delete : Commence la conversation *delete* pour supprimer définitivement une maintenance dont vous connaissez l'id.
 - /cancel : Annule la conversation au courant.
 
-## Etapes des conversations 
+## Structure des conversations :
+
+**Conversation ADD** 
+
+<img src="./diagrammes/add_conv.jpg?raw=true" /> 
+
+**Conversation GET** 
+
+<img src="./diagrammes/get_conv.jpg?raw=true" /> 
+
+**Conversation EDIT** 
+
+<img src="./diagrammes/edit_conv.jpg?raw=true" /> 
+
+**Conversation DELETE** 
+
+<img src="./diagrammes/delete_conv.jpg?raw=true" /> 
+
+## Execution en local : 
+
+**1. Clone Repo**
+
+```bash
+git clone https://gitlab.viarezo.fr/2022ouchnaya/bot_maintenance.git
+```
+
+**2. Installations**
+
+```bash
+py -m pip install telegram
+py -m pip install telegram.ext
+```
+
+**3. Configurer le token de votre bot**
+
+Ouvrir le fichier txt *TOKEN.txt*  et écrire votre token donné par [Botfather](https://t.me/Botfather)
+
+**4. Executer le code**
+
+Executer le fichier *main.py*  et c'est bon!
+
 
 
 

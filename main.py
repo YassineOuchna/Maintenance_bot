@@ -2,7 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 from bot import logs
 
-with open("./.gitignore/TOKEN.txt") as f:
+with open("./TOKEN.txt") as f:
     token = f.read().strip()
 
 
@@ -169,6 +169,7 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
     query_result = logs.retrieve_by_name(name_given)
     if query_result == None:
         await update.message.reply_text('Oops! There is no such maintenance. You can see the name of the /latest three maintenances.')
+        return GET_NAME
     else:
         await update.message.reply_text('Found the following maintenance : \n'
                                         '\n'
@@ -189,7 +190,7 @@ async def querry(update, context=ContextTypes.DEFAULT_TYPE):
                                         u'\U000026A0' f' Risk : {query_result[7]}\n'
                                         f'-{query_result[8]} \n'
                                         '...')
-    return ConversationHandler.END
+        return ConversationHandler.END
 
 
 '''--- LATEST ---'''
