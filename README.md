@@ -4,7 +4,7 @@ C'est un bot telegram qui gère les différentes types de maintenances au sein d
 
 ## Librairies utilisées 
 
-sqlite3 - telegram - telegram.ext
+sqlite3 - telegram - telebot - python-telegram-bot
 
 ## Fichiers et fonctionalités 
 
